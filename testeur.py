@@ -3,13 +3,14 @@ import sys
 from time import sleep
 from gpiozero import LED, MCP3008
 
-AREF = 3.3
-RESIST = 10
-TEMPO = 1
+AREF = 3.3  # Tension de référence ADC
+RESIST = 15  # Valeur de la résistance de décharge
+TEMPO = 1  # Cycle de mesure
+TEMPO_C = 60*10  # Temporisation de mesure de tension à vide
 
-ctrl = LED("GPIO24")
-bat0 = MCP3008(0)
-bat1 = MCP3008(1)
+ctrl = LED("GPIO24")  # GPIO de mise en décharge de la batterie
+bat0 = MCP3008(0)  # Point de mesure aval
+bat1 = MCP3008(1)  # Point de mesure amont
 
 try:
   énergie = 0
@@ -18,7 +19,7 @@ try:
     csv_out = csv.writer(csvfile)
     csv_out.writerow(["Pas", "Contrôle", "V0(V)", "V1(V)", "I(mA)", "E(mAh)"])
     while True:
-      if durée % 10:
+      if durée % TEMPO_C:
         ctrl.on()
       else:
         ctrl.off()
