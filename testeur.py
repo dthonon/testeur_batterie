@@ -1,5 +1,6 @@
 import csv
 import sys
+from pathlib import Path
 from time import sleep
 from gpiozero import LED, MCP3008
 
@@ -11,13 +12,33 @@ TEMPO_C = 60*10  # Temporisation de mesure de tension à vide
 ctrl = LED("GPIO24")  # GPIO de mise en décharge de la batterie
 bat0 = MCP3008(0)  # Point de mesure aval
 bat1 = MCP3008(1)  # Point de mesure amont
+fic_enreg = Path("batterie.csv")
 
 try:
   énergie = 0
   durée = 0
-  with open("batterie.csv", "w", newline="") as csvfile:
+
+  # Extension du fichier existant, s'il existe
+  if fic_enreg.exists():
+    print("Ajout au fichier d'enregistrement existant")
+    mode = "a"
+    # Recherche de la dernière énérgie relevée
+    with open(fic_enreg, "r", newline="") as csvfile:
+      csv_in = csv.reader(csvfile)
+      l = 0
+      for row in csv_in:
+        if l > 0:
+          énergie = float(row[5])
+        l += 1
+  else:
+    print("Création d'un nouveau fichier d'enregistrement")
+    mode = "w"
+  # Boucle infinie de lecture des tensions et écriture dans le fichier csv
+  with open(fic_enreg, mode, newline="") as csvfile:
     csv_out = csv.writer(csvfile)
-    csv_out.writerow(["Pas", "Contrôle", "V0(V)", "V1(V)", "I(mA)", "E(mAh)"])
+    if mode == "w":
+      # Nouveau fichier CSV : ajout de l'entête
+      csv_out.writerow(["Pas", "Contrôle", "V0(V)", "V1(V)", "I(mA)", "E(mAh)"])
     while True:
       if durée % TEMPO_C:
         ctrl.on()
